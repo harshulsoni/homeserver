@@ -4,6 +4,7 @@ volumes:
   adguard_conf:
   nginx_data:
   nginx_letsencrypt:
+  uptime-kuma:
 
 services:
   wg-easy:
@@ -112,6 +113,16 @@ services:
       - ENABLE_ACESTREAM=false
     networks:
       - server-network
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    ports:
+      - "3001:3001"
+    networks:
+      - server-network
+    volumes:
+      - uptime-kuma:/app/data
 
 networks:
   server-network:
