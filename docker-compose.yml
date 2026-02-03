@@ -98,6 +98,8 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+      labels:
+        - "docker-volume-backup.stop-during-backup=true"
 
   mediaflow_proxy:
     hostname: mediaflowproxy
@@ -123,6 +125,29 @@ services:
       - server-network
     volumes:
       - uptime-kuma:/app/data
+    labels:
+        - "docker-volume-backup.stop-during-backup=true"
+  
+  backup:
+    image: offen/docker-volume-backup:latest
+    environment:
+      BACKUP_CRON_EXPRESSION: "0 2 * * *"
+      BACKUP_RETENTION_DAYS: 7
+      BACKUP_FILENAME="daily-backup-%Y-%m-%dT%H-%M-%S.tar.gz"
+      # Dropbox Configuration
+      DROPBOX_APP_KEY: ${DROPBOX_APP_KEY}
+      DROPBOX_APP_SECRET: ${DROPBOX_APP_SECRET}
+      DROPBOX_REFRESH_TOKEN: {DROPBOX_REFRESH_TOKEN}
+      DROPBOX_REMOTE_PATH: "/backups" # Folder inside Dropbox
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Optional: Keep a local copy too
+      - ./backups:/archive
+      # Named volumes to back up
+      - wireguard:/backup/wireguard:ro
+      - nginx_data:/backup/nginx_data:ro
+      - nginx_letsencrypt:/backup/nginx_letsencrypt:ro
+      - uptime-kuma:/backup/uptime-kuma:ro
 
 networks:
   server-network:
