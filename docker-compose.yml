@@ -137,7 +137,7 @@ services:
       # Dropbox Configuration
       DROPBOX_APP_KEY: ${DROPBOX_APP_KEY}
       DROPBOX_APP_SECRET: ${DROPBOX_APP_SECRET}
-      DROPBOX_REFRESH_TOKEN: {DROPBOX_REFRESH_TOKEN}
+      DROPBOX_REFRESH_TOKEN: ${DROPBOX_REFRESH_TOKEN}
       DROPBOX_REMOTE_PATH: "/backups" # Folder inside Dropbox
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
