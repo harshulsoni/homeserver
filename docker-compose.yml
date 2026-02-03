@@ -5,6 +5,7 @@ volumes:
   nginx_data:
   nginx_letsencrypt:
   uptime-kuma:
+  backup_data:
 
 services:
   wg-easy:
@@ -142,7 +143,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Optional: Keep a local copy too
-      - ./backups:/archive
+      - backup_data:/archive
       # Named volumes to back up
       - wireguard:/backup/wireguard:ro
       - nginx_data:/backup/nginx_data:ro
