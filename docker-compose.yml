@@ -1,0 +1,122 @@
+volumes:
+  wireguard:
+  adguard_work:
+  adguard_conf:
+  nginx_data:
+  nginx_letsencrypt:
+
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:15
+    hostname: wireguard
+    networks:
+      - server-network
+    volumes:
+      - wireguard:/etc/wireguard
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - target: 51820
+        published: 51820
+        protocol: udp
+        mode: host # "host" mode bypasses the Swarm mesh to help WireGuard work
+      - target: 51821
+        published: 51821
+        protocol: tcp
+        mode: host
+    # WARNING: cap_add and sysctls often require "docker stack deploy" 
+    # and might be ignored by some older Swarm versions.
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    environment:
+      - INIT_ENABLED=true
+      - INIT_HOST=${WIREGUARD_HOST_NAME}
+      - INIT_PORT=51820
+      - INIT_USERNAME=${WIREGUARD_INIT_USERNAME}
+      - INIT_PASSWORD=${WIREGUARD_INIT_PASSWORD}
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager # WireGuard usually needs to stay on one specific node
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  adguard:
+    image: adguard/adguardhome
+    hostname: adguard
+    ports:
+      - target: 53
+        published: 1153
+        protocol: tcp
+      - target: 53
+        published: 1153
+        protocol: udp
+      - target: 80
+        published: 1180
+        protocol: tcp
+      - target: 3000
+        published: 3000
+        protocol: tcp
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    networks:
+      - server-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  nginx:
+    image: 'docker.io/jc21/nginx-proxy-manager:latest'
+    hostname: nginx
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+      - target: 81
+        published: 81
+        protocol: tcp
+      - target: 443
+        published: 443
+        protocol: tcp
+    volumes:
+     - nginx_data:/data
+     - nginx_letsencrypt:/etc/letsencrypt
+    networks:
+      - server-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  mediaflow_proxy:
+    hostname: mediaflowproxy
+    image: mhdzumair/mediaflow-proxy:latest
+    ports:
+      - "8888:8888"
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - PORT=8888
+      - API_PASSWORD=${MEDIAFLOW_PROXY_API_PASSWORD}
+      - FORWARDED_ALLOW_IPS=127.0.0.1
+      - ENABLE_ACESTREAM=false
+    networks:
+      - server-network
+
+networks:
+  server-network:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.2.0/24
