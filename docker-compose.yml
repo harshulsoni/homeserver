@@ -117,6 +117,3 @@ networks:
   server-network:
     driver: overlay
     attachable: true
-    ipam:
-      config:
-        - subnet: 10.0.2.0/24
