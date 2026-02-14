@@ -6,6 +6,8 @@ volumes:
   nginx_letsencrypt:
   uptime-kuma:
   backup_data:
+  prometheus_data:
+  grafana_data:
 
 services:
   wg-easy:
@@ -149,6 +151,78 @@ services:
       - nginx_data:/backup/nginx_data:ro
       - nginx_letsencrypt:/backup/nginx_letsencrypt:ro
       - uptime-kuma:/backup/uptime-kuma:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prometheus
+    networks:
+      - server-network
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host # Directly on the host network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    configs:
+      - source: prom_config
+        target: /etc/prometheus/prometheus.yml
+    volumes:
+      - prometheus_data:/prometheus
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    networks:
+      - server-network
+    ports:
+      - target: 3000
+        published: 3100 # Accessible at http://host-ip:3100
+        protocol: tcp
+        mode: host # Directly on the host network
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    networks:
+      - monitor-net
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    deploy:
+      mode: global
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    networks:
+      - monitor-net
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points="^/(sys|proc|dev|host|etc)($$|/)"'
+    deploy:
+      mode: global
+
+configs:
+  prom_config:
+    external: true
 
 networks:
   server-network:
