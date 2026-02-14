@@ -195,7 +195,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     networks:
-      - monitor-net
+      - server-network
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -208,7 +208,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     networks:
-      - monitor-net
+      - server-network
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
