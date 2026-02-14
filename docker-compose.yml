@@ -163,6 +163,7 @@ services:
         protocol: tcp
         mode: host # Directly on the host network
     command:
+      - '--storage.tsdb.retention.time=7d'
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     configs:
