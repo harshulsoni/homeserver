@@ -8,6 +8,8 @@ volumes:
   backup_data:
   prometheus_data:
   grafana_data:
+  loki_data:
+  alertmanager_data:
 
 services:
   wg-easy:
@@ -220,9 +222,59 @@ services:
       - '--collector.filesystem.ignored-mount-points="^/(sys|proc|dev|host|etc)($$|/)"'
     deploy:
       mode: global
+  
+  alertmanager:
+    image: prom/alertmanager:latest
+    networks:
+      - server-network
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_data:/data
+    configs:
+      - source: alert_config
+        target: /etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/data'
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  loki:
+    image: grafana/loki:latest
+    networks:
+      - server-network
+    ports:
+      - "3101:3100" # Mapped to 3101 as 3100 might be close to your Grafana port
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  promtail:
+    image: grafana/promtail:latest
+    networks:
+      - server-network
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    configs:
+      - source: promtail_config
+        target: /etc/promtail/config.yml
+    deploy:
+      mode: global
 
 configs:
   prom_config:
+    external: true
+  alert_config:
+    external: true
+  promtail_config:
     external: true
 
 networks:
