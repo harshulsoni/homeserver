@@ -220,10 +220,16 @@ docker volume inspect -f '{{.Mountpoint}}' homeserver_prometheus_data
 
 ### Volumes Backed Up
 - wireguard
+- adguard_work
+- adguard_conf
 - nginx_data
 - nginx_letsencrypt
 - uptime-kuma
-- (Optional: Add more volumes to backup config)
+- prometheus_data
+- grafana_data
+- alertmanager_data
+
+**Note:** loki_data (logs) is excluded to save backup storage space as logs are ephemeral.
 
 ## Backup Configuration
 

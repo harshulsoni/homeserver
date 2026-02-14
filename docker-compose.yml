@@ -148,11 +148,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Optional: Keep a local copy too
       - backup_data:/archive
-      # Named volumes to back up
+      # Named volumes to back up (excluding logs)
       - wireguard:/backup/wireguard:ro
+      - adguard_work:/backup/adguard_work:ro
+      - adguard_conf:/backup/adguard_conf:ro
       - nginx_data:/backup/nginx_data:ro
       - nginx_letsencrypt:/backup/nginx_letsencrypt:ro
       - uptime-kuma:/backup/uptime-kuma:ro
+      - prometheus_data:/backup/prometheus_data:ro
+      - grafana_data:/backup/grafana_data:ro
+      - alertmanager_data:/backup/alertmanager_data:ro
 
   prometheus:
     image: prom/prometheus:latest
