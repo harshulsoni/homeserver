@@ -1,0 +1,6 @@
+route:
+  group_by: ['alertname']
+  receiver: 'log-only'
+
+receivers:
+- name: 'log-only'
