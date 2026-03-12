@@ -225,7 +225,6 @@ docker volume inspect -f '{{.Mountpoint}}' homeserver_prometheus_data
 - nginx_data
 - nginx_letsencrypt
 - uptime-kuma
-- prometheus_data
 - grafana_data
 - alertmanager_data
 

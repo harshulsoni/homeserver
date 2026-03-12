@@ -155,7 +155,6 @@ services:
       - nginx_data:/backup/nginx_data:ro
       - nginx_letsencrypt:/backup/nginx_letsencrypt:ro
       - uptime-kuma:/backup/uptime-kuma:ro
-      - prometheus_data:/backup/prometheus_data:ro
       - grafana_data:/backup/grafana_data:ro
       - alertmanager_data:/backup/alertmanager_data:ro
 
